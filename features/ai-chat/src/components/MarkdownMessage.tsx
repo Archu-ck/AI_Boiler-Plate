@@ -5,9 +5,9 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
-export default function MarkdownMessage({ content }: { content: string }) {
+const MarkdownMessage = memo(function MarkdownMessage({ content }: { content: string }) {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const handleCopy = (text: string) => {
@@ -82,4 +82,6 @@ export default function MarkdownMessage({ content }: { content: string }) {
       {content}
     </ReactMarkdown>
   );
-}
+});
+
+export default MarkdownMessage;

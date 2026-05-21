@@ -4,6 +4,7 @@ import path from 'path';
 import connectDB from '@/lib/mongoose';
 import { Conversation } from '@/models/Conversation';
 import { Message } from '@/models/Message';
+import { searchPastConversations, formatSearchContext } from '@/lib/search';
 import { GoogleGenAI } from '@google/genai';
 
 export async function POST(req: Request) {
@@ -31,9 +32,18 @@ export async function POST(req: Request) {
     // Check if it's the first message
     const messageCount = await Message.countDocuments({ conversationId });
     if (messageCount === 1) {
-      // Auto-title from first 6 words
-      const title = content.split(/\s+/).slice(0, 6).join(' ') + '...';
-      await Conversation.findByIdAndUpdate(conversationId, { title, updatedAt: new Date() });
+      // Fire-and-forget AI auto-title generation so it doesn't block the stream
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: `Create a very short, descriptive 3-5 word title for a chat session starting with this prompt: "${content}". Respond with ONLY the title, no quotes, no labels or extra text. Do not name it the prompt itself, name it what the session is ABOUT.`
+      }).then(async (result) => {
+        const titleText = result.text?.trim().replace(/^["']|["']$/g, '') || 'New Chat';
+        await Conversation.findByIdAndUpdate(conversationId, { title: titleText, updatedAt: new Date() });
+      }).catch(err => console.error('Failed to auto-title', err));
+      
+      // Set a temporary placeholder while AI thinks
+      await Conversation.findByIdAndUpdate(conversationId, { title: "New Chat...", updatedAt: new Date() });
     } else {
       await Conversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() });
     }
@@ -47,10 +57,24 @@ export async function POST(req: Request) {
       console.warn('Could not read instructions.md, using default system prompt.');
     }
 
-    // Fetch history
-    const previousMessages = await Message.find({ conversationId })
-      .sort({ createdAt: 1 })
-      .limit(50); // Get up to last 50 messages to avoid token limits
+    // ── Cross-session memory search ──────────────────────────────────
+    // Run the two-phase search in parallel with fetching current history.
+    const [previousMessages, searchHits] = await Promise.all([
+      Message.find({ conversationId })
+        .sort({ createdAt: 1 })
+        .limit(50),
+      searchPastConversations(content, conversationId).catch((err) => {
+        // Search is best-effort — never let it block the response
+        console.warn('Cross-session search failed, continuing without:', err);
+        return [];
+      }),
+    ]);
+
+    // Inject past-conversation context into the system instruction
+    const pastContext = formatSearchContext(searchHits);
+    if (pastContext) {
+      systemInstruction += '\n\n' + pastContext;
+    }
 
     const history = previousMessages.slice(0, -1).map((msg) => ({
       role: msg.role,
@@ -59,7 +83,7 @@ export async function POST(req: Request) {
 
     // Initialize Gemini
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
+
     // Ensure we map any legacy or unsupported models to a working one
     let targetModel = conversation.model || 'gemini-3.5-flash';
     const legacyModels = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.0-flash-exp'];

@@ -158,8 +158,6 @@ export default function Home() {
         onSelect={handleSelectConversation}
         onDelete={handleDelete}
         onNewChat={handleNewChat}
-        model={model}
-        setModel={setModel}
         isLoading={isLoadingConversations}
       />
       <div className="flex-1 flex flex-col relative min-w-0">
@@ -175,6 +173,8 @@ export default function Home() {
           onStop={handleStop}
           isStreaming={isStreaming}
           streamError={streamError}
+          model={model}
+          setModel={setModel}
         />
       </div>
     </div>

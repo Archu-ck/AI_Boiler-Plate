@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
+import mongoose, { Model, Schema } from 'mongoose';
 
 export interface IMessage {
   conversationId: mongoose.Types.ObjectId;
@@ -20,6 +20,11 @@ const MessageSchema = new Schema<IMessage>(
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
+
+// Full-text index on content for cross-session search.
+// MongoDB text indexes use an inverted-index structure under the hood,
+// so $text queries are O(log n) lookups — not collection scans.
+MessageSchema.index({ content: 'text' });
 
 export const Message: Model<IMessage> =
   mongoose.models.Message || mongoose.model<IMessage>('Message', MessageSchema);
