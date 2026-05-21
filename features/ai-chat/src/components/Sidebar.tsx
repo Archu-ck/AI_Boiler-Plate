@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, MessageSquare, Trash2, Search, X, ArrowRight } from 'lucide-react';
+import { Icons } from './Icons';
+const { Plus, MessageSquare, Trash2, Search, X, ArrowRight } = Icons;
 
 interface SearchResult {
   conversationId: string;
@@ -16,7 +17,11 @@ interface SidebarProps {
   onDelete: (id: string) => void;
   onNewChat: () => void;
   isLoading: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
+
+import ThemeToggle from './ThemeToggle';
 
 export default function Sidebar({
   conversations,
@@ -24,7 +29,9 @@ export default function Sidebar({
   onSelect,
   onDelete,
   onNewChat,
-  isLoading
+  isLoading,
+  isOpen = false,
+  onClose
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -74,9 +81,28 @@ export default function Sidebar({
   };
 
   return (
-    <div className="w-66 bg-[#f0f4f9] dark:bg-[#1e1f20] h-full flex flex-col border-r border-[#d3e3fd] dark:border-[#3c4043] transition-colors duration-200">
+    <>
+      {/* Mobile Overlay */}
+      <div 
+        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={onClose}
+      />
+      
+      {/* Sidebar Container */}
+      <div className={`fixed md:relative inset-y-0 left-0 z-50 md:z-auto w-66 bg-[#f0f4f9] dark:bg-[#1e1f20] h-full flex flex-col border-r border-[#d3e3fd] dark:border-[#3c4043] transition-transform duration-300 ease-in-out md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* Header / Theme Toggle & Close Button */}
+        <div className="px-4 pt-4 flex justify-between items-center md:justify-end">
+          <button 
+            onClick={onClose}
+            className="md:hidden p-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors"
+          >
+            <X size={18} className="stroke-[2.5]" />
+          </button>
+          <ThemeToggle />
+        </div>
+
       {/* Top Buttons */}
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-2 pt-2">
         <button
           onClick={onNewChat}
           style={{ cursor: 'pointer' }}
@@ -238,5 +264,6 @@ export default function Sidebar({
         )}
       </div>
     </div>
+    </>
   );
 }

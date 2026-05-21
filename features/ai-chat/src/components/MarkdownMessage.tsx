@@ -3,7 +3,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy, Check } from 'lucide-react';
 import { useState, memo } from 'react';
 
@@ -26,29 +26,29 @@ const MarkdownMessage = memo(function MarkdownMessage({ content }: { content: st
           const codeString = String(children).replace(/\n$/, '');
           const isInline = !match;
           return !isInline ? (
-            <div className="relative group my-4 rounded-md overflow-hidden bg-[#1e1e1e]">
-              <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] text-xs text-gray-400">
-                <span className="font-mono">{language}</span>
+            <div className="relative my-4 rounded-2xl overflow-hidden bg-white/30 dark:bg-white/30 border border-white/50 dark:border-white/50 shadow-sm backdrop-blur-md">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-white/60 dark:bg-white/60 border-b border-white/30 dark:border-white/30 text-xs text-gray-700 font-semibold select-none">
+                <span className="font-mono text-gray-500">{language}</span>
                 <button
                   onClick={() => handleCopy(codeString)}
-                  className="flex items-center gap-1.5 hover:text-white transition-colors"
+                  className="flex items-center gap-1.5 text-gray-500 hover:text-gray-800 transition-colors"
                 >
-                  {copiedCode === codeString ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                  {copiedCode === codeString ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
                   <span>{copiedCode === codeString ? 'Copied!' : 'Copy code'}</span>
                 </button>
               </div>
               <SyntaxHighlighter
                 {...props}
-                style={vscDarkPlus as any}
+                style={prism as any}
                 language={language}
                 PreTag="div"
-                className="!m-0 !bg-transparent text-sm"
+                className="!m-0 !bg-transparent text-sm !p-4"
               >
                 {codeString}
               </SyntaxHighlighter>
             </div>
           ) : (
-            <code {...props} className="bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-0.5 font-mono text-sm text-pink-500">
+            <code {...props} className="bg-black/5 dark:bg-black/5 border border-black/5 rounded px-1.5 py-0.5 font-mono text-xs font-semibold text-pink-600 dark:text-pink-600">
               {children}
             </code>
           );

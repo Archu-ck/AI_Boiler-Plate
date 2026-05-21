@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "@/styles/glass.css"; /* Remove this if you dont want fancy glass ui */
 
 const inter = Inter({ subsets: ["latin"] });
 

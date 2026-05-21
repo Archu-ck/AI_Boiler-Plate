@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Square, Sparkles, Terminal, FileText, Lightbulb, Copy, Check, CornerUpLeft, X, ChevronDown } from 'lucide-react';
+import { Icons } from './Icons';
+const { Send, Square, Sparkles, Terminal, FileText, Lightbulb, Copy, Check, CornerUpLeft, X, ChevronDown } = Icons;
 import MarkdownMessage from './MarkdownMessage';
 
 interface Message {
@@ -19,6 +20,7 @@ interface ChatAreaProps {
   streamError: boolean;
   model: string;
   setModel: (model: string) => void;
+  onToggleSidebar?: () => void;
 }
 
 const ACTION_CARDS = [
@@ -69,6 +71,7 @@ export default function ChatArea({
   streamError,
   model,
   setModel,
+  onToggleSidebar,
 }: ChatAreaProps) {
   const [input, setInput] = useState('');
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
@@ -82,6 +85,7 @@ export default function ChatArea({
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -98,7 +102,9 @@ export default function ChatArea({
   }, []);
 
   const scrollToBottom = () => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -179,7 +185,16 @@ export default function ChatArea({
   return (
     <div className="flex-1 flex flex-col h-full bg-white dark:bg-[#131314] transition-colors duration-200 relative">
 
-
+      {/* Mobile Header for Sidebar Toggle */}
+      <div className="md:hidden flex items-center p-3 border-b border-gray-100 dark:border-[#2d2f31]">
+        <button 
+          onClick={onToggleSidebar}
+          className="p-2 text-gray-500 hover:text-gray-800 dark:hover:text-[#e3e3e3] rounded-full hover:bg-gray-100 dark:hover:bg-[#2d2f31] transition-colors"
+        >
+          <Icons.Menu size={20} className="stroke-[2.5]" />
+        </button>
+        <span className="ml-2 font-semibold text-gray-800 dark:text-[#e3e3e3]">AI Chat</span>
+      </div>
 
       {/* Floating "Reply to selection" popup */}
       {selectionQuote && (
@@ -211,7 +226,7 @@ export default function ChatArea({
       )}
 
       {/* Messages / Welcome View */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-4 py-6" ref={messagesContainerRef}>
         {messages.length === 0 && !isLoading ? (
           <div className="h-full max-w-2xl mx-auto flex flex-col items-center justify-center space-y-8 px-4">
             <div className="text-center space-y-3">
@@ -368,9 +383,9 @@ export default function ChatArea({
                 onClick={handleSend}
                 disabled={!input.trim() || isStreaming}
                 style={{ cursor: input.trim() && !isStreaming ? 'pointer' : 'default' }}
-                className="absolute right-3.5 bottom-3 p-2 bg-[#0b57d0] dark:bg-[#a8c7fa] text-white dark:text-[#131314] rounded-full disabled:opacity-40 disabled:bg-gray-300 dark:disabled:bg-gray-700 dark:disabled:text-gray-500 transition-all hover:scale-105 active:scale-95"
+                className="absolute right-3.5 bottom-2.5 w-9 h-9 flex items-center justify-center bg-[#0b57d0] dark:bg-[#a8c7fa] text-white dark:text-[#131314] rounded-full disabled:opacity-40 disabled:bg-gray-300 dark:disabled:bg-gray-700 dark:disabled:text-gray-500 transition-all hover:scale-105 active:scale-95 shadow-sm"
               >
-                <Send size={16} className="ml-0.5" />
+                <Send size={16} />
               </button>
             </div>
 

@@ -13,6 +13,7 @@ export default function Home() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamError, setStreamError] = useState(false);
   const [dbError, setDbError] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -155,10 +156,12 @@ export default function Home() {
       <Sidebar
         conversations={conversations}
         activeId={activeId}
-        onSelect={handleSelectConversation}
+        onSelect={(id) => { handleSelectConversation(id); setIsSidebarOpen(false); }}
         onDelete={handleDelete}
-        onNewChat={handleNewChat}
+        onNewChat={() => { handleNewChat(); setIsSidebarOpen(false); }}
         isLoading={isLoadingConversations}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
       <div className="flex-1 flex flex-col relative min-w-0">
         {dbError && (
@@ -175,6 +178,7 @@ export default function Home() {
           streamError={streamError}
           model={model}
           setModel={setModel}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
       </div>
     </div>
